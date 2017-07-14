@@ -28,6 +28,8 @@ ARGPARSE_SUPPORTED_KWARGS = [
     'choices',
     'help',
     'metavar',
+    'required',
+    'action'
 ]
 
 
