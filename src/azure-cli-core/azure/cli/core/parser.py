@@ -9,9 +9,9 @@ import argparse
 import argcomplete
 
 import azure.cli.core.telemetry as telemetry
-import azure.cli.core._help as _help
 from azure.cli.core._pkg_util import handle_module_not_installed
 
+from knack.help import show_help
 from knack.log import get_logger
 from knack.parser import CLICommandParser
 from knack.util import CLIError
@@ -136,9 +136,10 @@ class AzCliCommandParser(CLICommandParser):
         telemetry.set_command_details(command=self.prog[3:])
         telemetry.set_success(summary='show help')
 
-        _help.show_help(self.prog.split()[1:],
-                        self._actions[-1] if is_group else self,
-                        is_group)
+        show_help(self.prog.split()[0],
+                  self.prog.split()[1:],
+                  self._actions[-1] if is_group else self,
+                  is_group)
         self.exit()
 
     def _check_value(self, action, value):

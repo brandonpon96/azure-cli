@@ -7,12 +7,9 @@ from __future__ import print_function
 import sys
 
 from knack.help import \
-    (HelpExample, CommandHelpFile, GroupHelpFile, HelpFile as KnackHelpFile,
+    (HelpExample, CommandHelpFile, GroupHelpFile, HelpFile as KnackHelpFile, CLIHelp,
      ArgumentGroupRegistry as KnackArgumentGroupRegistry, print_description_list, _print_indent,
      print_detailed_help)
-
-
-__all__ = ['print_detailed_help', 'print_welcome_message', 'GroupHelpFile', 'CommandHelpFile']
 
 
 PRIVACY_STATEMENT = """
@@ -30,47 +27,23 @@ You can change your telemetry settings with `az configure`.
 """
 
 
-def show_privacy_statement():
-    from azure.cli.core._config import get_az_config
-    az_config = get_az_config()
-    first_ran = az_config.getboolean('core', 'first_run', fallback=False)
-    if not first_ran:
-        print(PRIVACY_STATEMENT, file=sys.stdout)
-        set_global_config_value('core', 'first_run', 'yes')
+WELCOME_MESSAGE = """
+    /\\
+   /  \\    _____   _ _ __ ___
+  / /\ \\  |_  / | | | \'__/ _ \\
+ / ____ \\  / /| |_| | | |  __/
+/_/    \_\\/___|\__,_|_|  \___|
 
+Welcome to the cool new Azure CLI!
 
-def show_help(nouns, parser, is_group):
-    delimiters = ' '.join(nouns)
-    help_file = CommandHelpFile(delimiters, parser) \
-        if not is_group \
-        else GroupHelpFile(delimiters, parser)
+Here are the base commands:
+"""
 
-    help_file.load(parser)
+class AzCliHelp(CLIHelp):
 
-    if not nouns:
-        print("\nFor version info, use 'az --version'")
-        help_file.command = ''
-
-    print_detailed_help('az', help_file)
-
-
-def show_welcome(parser):
-    show_privacy_statement()
-    print_welcome_message()
-
-    help_file = GroupHelpFile('', parser)
-    print_description_list(help_file.children)
-
-
-def print_welcome_message():
-    _print_indent(r"""
-     /\
-    /  \    _____   _ _ __ ___
-   / /\ \  |_  / | | | \'__/ _ \
-  / ____ \  / /| |_| | | |  __/
- /_/    \_\/___|\__,_|_|  \___|
-""")
-    _print_indent('\nWelcome to the cool new Azure CLI!\n\nHere are the base commands:\n')
+    def __init__(self, ctx):
+        self.ctx = ctx
+        super(AzCliHelp, self).__init__(ctx, PRIVACY_STATEMENT, WELCOME_MESSAGE)
 
 
 class ArgumentGroupRegistry(KnackArgumentGroupRegistry):  # pylint: disable=too-few-public-methods

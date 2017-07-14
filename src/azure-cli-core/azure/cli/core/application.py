@@ -10,6 +10,7 @@ from azure.cli.core.azlogging import AzCliLogging
 from azure.cli.core.parser import AzCliCommandParser
 import azure.cli.core.telemetry as telemetry
 from azure.cli.core._config import GLOBAL_CONFIG_DIR, ENV_VAR_PREFIX
+from azure.cli.core._help import AzCliHelp
 
 from knack.completion import ARGCOMPLETE_ENV_NAME
 
@@ -18,9 +19,8 @@ AZ_CLI = AzCli(cli_name='az',
                config_env_var_prefix=ENV_VAR_PREFIX,
                commands_loader_cls=MainCommandsLoader,
                parser_cls=AzCliCommandParser,
-               logging_cls=AzCliLogging)
-
-
+               logging_cls=AzCliLogging,
+               help_cls=AzCliHelp)
 
 telemetry.set_application(AZ_CLI, ARGCOMPLETE_ENV_NAME)
 
