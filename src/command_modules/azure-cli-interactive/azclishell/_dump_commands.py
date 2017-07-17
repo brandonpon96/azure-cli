@@ -11,7 +11,6 @@ import os
 import pkgutil
 import yaml
 
-from azure.cli.core.application import AZ_CLI, Configuration
 from azure.cli.core.commands import _update_command_definitions, BLACKLISTED_MODS
 from knack.help_files import helps
 from azure.cli.core.commands.arm import add_id_parameters

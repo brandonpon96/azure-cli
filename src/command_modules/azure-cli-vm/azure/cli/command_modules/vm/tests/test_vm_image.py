@@ -7,7 +7,6 @@ import os.path
 import unittest
 import mock
 
-import azure.cli.core.application as application
 from knack.util import CLIError
 from azure.cli.core.cloud import CloudEndpointNotSetException
 

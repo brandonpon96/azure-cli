@@ -27,7 +27,7 @@ class CloudCommandsLoader(AzCommandsLoader):
         return self.command_table
 
     def load_arguments(self, command):
-        active_cloud_name = get_active_cloud_name()
+        active_cloud_name = get_active_cloud_name(self.ctx)
 
         self.register_cli_argument('cloud', 'cloud_name', options_list=('--name', '-n'),
                                    help='Name of a registered cloud',

@@ -132,3 +132,27 @@ class AzCommandsLoader(CLICommandsLoader):
                              help='Do not prompt for confirmation')
         return cmd
 
+    @staticmethod
+    def get_op_handler(cls, operation):
+        """ Import and load the operation handler """
+        # Patch the unversioned sdk path to include the appropriate API version for the
+        # resource type in question.
+        from azure.cli.core._profile import get_active_cloud
+        import types
+
+        cloud = get_active_cloud(cls.ctx)
+        for rt in ResourceType:
+            if operation.startswith(rt.import_prefix):
+                operation = operation.replace(rt.import_prefix,
+                                              get_versioned_sdk_path(cloud.profile, rt))
+        try:
+            mod_to_import, attr_path = operation.split('#')
+            op = import_module(mod_to_import)
+            for part in attr_path.split('.'):
+                op = getattr(op, part)
+            if isinstance(op, types.FunctionType):
+                return op
+            return six.get_method_function(op)
+        except (ValueError, AttributeError):
+            raise ValueError("The operation '{}' is invalid.".format(operation))
+

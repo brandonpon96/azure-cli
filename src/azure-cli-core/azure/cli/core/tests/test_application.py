@@ -8,8 +8,8 @@ import unittest
 import os
 import tempfile
 
-from azure.cli.core.application import AZ_CLI, IterateAction
 from azure.cli.core.commands import CliCommand
+from azure.cli.core.commands.validators import IterateAction
 from knack.util import CLIError
 
 

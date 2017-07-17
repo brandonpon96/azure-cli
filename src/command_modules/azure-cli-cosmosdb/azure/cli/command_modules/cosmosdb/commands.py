@@ -5,7 +5,6 @@
 
 # pylint: disable=line-too-long
 
-from azure.cli.core.application import AZ_CLI
 from azure.cli.core.commands import cli_command
 from azure.cli.command_modules.cosmosdb._client_factory import (cf_documentdb)
 from ._client_factory import get_document_client_factory

@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+import argparse
 import time
 import random
 from azure.cli.core.profiles import ResourceType
@@ -10,6 +11,26 @@ from azure.cli.core.profiles import ResourceType
 from knack.log import get_logger
 
 logger = get_logger(__name__)
+
+
+class IterateAction(argparse.Action):  # pylint: disable=too-few-public-methods
+    '''Action used to collect argument values in an IterateValue list
+    The application will loop through each value in the IterateValue
+    and execeute the associated handler for each
+    '''
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, IterateValue(values))
+
+
+class IterateValue(list):
+    '''Marker class to indicate that, when found as a value in the parsed namespace
+    from argparse, the handler should be invoked once per value in the list with all
+    other values in the parsed namespace frozen.
+
+    Typical use is to allow multiple ID parameter to a show command etc.
+    '''
+    pass
 
 
 def validate_tags(ns):

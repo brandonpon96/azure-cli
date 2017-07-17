@@ -216,22 +216,20 @@ AZURE_GERMAN_CLOUD = Cloud(
 KNOWN_CLOUDS = [AZURE_PUBLIC_CLOUD, AZURE_CHINA_CLOUD, AZURE_US_GOV_CLOUD, AZURE_GERMAN_CLOUD]
 
 
-def _set_active_cloud(cloud_name):
-    set_global_config_value('cloud', 'name', cloud_name)
+def _set_active_cloud(cli_ctx, cloud_name):
+    cli_ctx.config.set_value('cloud', 'name', cloud_name)
 
 
-def get_active_cloud_name():
-    global_config = get_config_parser()
-    global_config.read(GLOBAL_CONFIG_PATH)
+def get_active_cloud_name(cli_ctx):
     try:
-        return global_config.get('cloud', 'name')
+        return cli_ctx.config.config_parser.get('cloud', 'name')
     except (configparser.NoOptionError, configparser.NoSectionError):
-        _set_active_cloud(AZURE_PUBLIC_CLOUD.name)
+        _set_active_cloud(cli_ctx, AZURE_PUBLIC_CLOUD.name)
         return AZURE_PUBLIC_CLOUD.name
 
 
-def _get_cloud(cloud_name):
-    return next((x for x in get_clouds() if x.name == cloud_name), None)
+def _get_cloud(cli_ctx, cloud_name):
+    return next((x for x in get_clouds(cli_ctx) if x.name == cloud_name), None)
 
 
 def get_custom_clouds():
@@ -252,7 +250,7 @@ def init_known_clouds(force=False):
         config.write(configfile)
 
 
-def get_clouds():
+def get_clouds(cli_ctx):
     clouds = []
     # load the config again as it may have changed
     config = get_config_parser()
@@ -276,7 +274,7 @@ def get_clouds():
             # If management endpoint not set, use resource manager endpoint
             c.endpoints.management = c.endpoints.resource_manager
         clouds.append(c)
-    active_cloud_name = get_active_cloud_name()
+    active_cloud_name = get_active_cloud_name(cli_ctx)
     for c in clouds:
         if c.name == active_cloud_name:
             c.is_active = True
@@ -284,15 +282,15 @@ def get_clouds():
     return clouds
 
 
-def get_cloud(cloud_name):
-    cloud = _get_cloud(cloud_name)
+def get_cloud(cli_ctx, cloud_name):
+    cloud = _get_cloud(cli_ctx, cloud_name)
     if not cloud:
         raise CloudNotRegisteredException(cloud_name)
     return cloud
 
 
-def get_active_cloud():
-    return get_cloud(get_active_cloud_name())
+def get_active_cloud(cli_ctx):
+    return get_cloud(cli_ctx, get_active_cloud_name(cli_ctx))
 
 
 def get_cloud_subscription(cloud_name):

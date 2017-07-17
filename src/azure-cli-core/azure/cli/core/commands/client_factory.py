@@ -5,9 +5,8 @@
 
 import os
 from azure.cli.core import __version__ as core_version
-from azure.cli.core._profile import Profile, CLOUD
+from azure.cli.core._profile import Profile, get_active_cloud
 import azure.cli.core._debug as _debug
-from azure.cli.core.application import AZ_CLI
 from azure.cli.core.profiles._shared import get_client_class
 from azure.cli.core.profiles import get_api_version, get_sdk, ResourceType
 
@@ -39,7 +38,7 @@ def get_subscription_service_client():
                                     api_version=get_api_version(ResourceType.MGMT_RESOURCE_SUBSCRIPTIONS))
 
 
-def configure_common_settings(client):
+def configure_common_settings(cli_ctx, client):
     client = _debug.change_ssl_cert_verification(client)
 
     client.config.add_user_agent(UA_AGENT)
@@ -48,31 +47,33 @@ def configure_common_settings(client):
     except KeyError:
         pass
 
-    for header, value in AZ_CLI.data['headers']:
+    for header, value in cli_ctx.data['headers']:
         # We are working with the autorest team to expose the add_header functionality of the generated client to avoid
         # having to access private members
         client._client.add_header(header, value)  # pylint: disable=protected-access
 
-    command_name_suffix = ';completer-request' if AZ_CLI.data['completer_active'] else ''
+    command_name_suffix = ';completer-request' if cli_ctx.data['completer_active'] else ''
     client._client.add_header('CommandName',  # pylint: disable=protected-access
-                              "{}{}".format(AZ_CLI.data['command'], command_name_suffix))
-    client.config.generate_client_request_id = 'x-ms-client-request-id' not in AZ_CLI.data['headers']
+                              "{}{}".format(cli_ctx.data['command'], command_name_suffix))
+    client.config.generate_client_request_id = 'x-ms-client-request-id' not in cli_ctx.data['headers']
 
 
-def _get_mgmt_service_client(client_type,
+def _get_mgmt_service_client(cli_ctx,
+                             client_type,
                              subscription_bound=True,
                              subscription_id=None,
                              api_version=None,
                              base_url_bound=True,
-                             resource=CLOUD.endpoints.active_directory_resource_id,
+                             resource=None,
                              **kwargs):
     logger.debug('Getting management service client client_type=%s', client_type.__name__)
-    profile = Profile()
-    cred, subscription_id, _ = profile.get_login_credentials(subscription_id=subscription_id,
-                                                             resource=resource)
+    profile = Profile(cli_ctx)
+    resource = resource or get_active_cloud(cli_ctx).endpoints.active_directory_resource_id
+    cred, subscription_id, _ = profile.get_login_credentials(subscription_id=subscription_id, resource=resource)
+
     client_kwargs = {}
     if base_url_bound:
-        client_kwargs = {'base_url': CLOUD.endpoints.resource_manager}
+        client_kwargs = {'base_url': get_active_cloud(AZ_CLI).endpoints.resource_manager}
     if api_version:
         client_kwargs['api_version'] = api_version
     if kwargs:

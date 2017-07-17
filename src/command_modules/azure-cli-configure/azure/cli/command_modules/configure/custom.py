@@ -7,8 +7,7 @@ from __future__ import print_function
 import os
 from six.moves import configparser
 
-from azure.cli.core._config import (GLOBAL_CONFIG_PATH, ENV_VAR_PREFIX, set_global_config,
-                                    set_global_config_value, DEFAULTS_SECTION, get_config_parser)
+from azure.cli.core._config import GLOBAL_CONFIG_PATH, ENV_VAR_PREFIX, DEFAULTS_SECTION
 from azure.cli.command_modules.configure._consts import (OUTPUT_LIST, LOGIN_METHOD_LIST,
                                                          MSG_INTRO,
                                                          MSG_CLOSING,
@@ -89,14 +88,14 @@ def _config_env_public_azure(_):
                 logger.error(err)
 
 
-def _handle_global_configuration():
+def _handle_global_configuration(config):
     # print location of global configuration
-    print(MSG_GLOBAL_SETTINGS_LOCATION.format(GLOBAL_CONFIG_PATH))
+    print(MSG_GLOBAL_SETTINGS_LOCATION.format(config.config_path))
     # set up the config parsers
-    file_config = get_config_parser()
-    config_exists = file_config.read([GLOBAL_CONFIG_PATH])
-    global_config = get_config_parser()
-    global_config.read(GLOBAL_CONFIG_PATH)
+    file_config = config.config_parser
+    config_exists = file_config.read([config.config_path])
+    #global_config = config.config_parser
+    #global_config.read(config.config_path)
     should_modify_global_config = False
     if config_exists:
         # print current config and prompt to allow global config modification
@@ -106,7 +105,7 @@ def _handle_global_configuration():
     if not config_exists or should_modify_global_config:
         # no config exists yet so configure global config or user wants to modify global config
         output_index = prompt_choice_list(MSG_PROMPT_GLOBAL_OUTPUT, OUTPUT_LIST,
-                                          default=get_default_from_config(global_config,
+                                          default=get_default_from_config(config.config_parser,
                                                                           'core', 'output',
                                                                           OUTPUT_LIST))
         answers['output_type_prompt'] = output_index
@@ -116,32 +115,31 @@ def _handle_global_configuration():
         answers['telemetry_prompt'] = allow_telemetry
         # save the global config
         try:
-            global_config.add_section('core')
+            config.config_parser.add_section('core')
         except configparser.DuplicateSectionError:
             pass
         try:
-            global_config.add_section('logging')
+            config.config_parser.add_section('logging')
         except configparser.DuplicateSectionError:
             pass
-        global_config.set('core', 'output', OUTPUT_LIST[output_index]['name'])
-        global_config.set('core', 'collect_telemetry', 'yes' if allow_telemetry else 'no')
-        global_config.set('logging', 'enable_log_file', 'yes' if enable_file_logging else 'no')
-        set_global_config(global_config)
+        config.set_value('core', 'output', OUTPUT_LIST[output_index]['name'])
+        config.set_value('core', 'collect_telemetry', 'yes' if allow_telemetry else 'no')
+        config.set_value('logging', 'enable_log_file', 'yes' if enable_file_logging else 'no')
 
 
-def handle_configure(defaults=None):
+def handle_configure(self, defaults=None):
     if defaults:
         for default in defaults:
             parts = default.split('=', 1)
             if len(parts) == 1:
                 raise CLIError('usage error: --defaults STRING=STRING STRING=STRING ...')
-            set_global_config_value(DEFAULTS_SECTION, parts[0], _normalize_config_value(parts[1]))
+            self.config.set_value(DEFAULTS_SECTION, parts[0], _normalize_config_value(parts[1]))
         return
 
     # if nothing supplied, we go interactively
     try:
         print(MSG_INTRO)
-        _handle_global_configuration()
+        _handle_global_configuration(self.config)
         print(MSG_CLOSING)
         # TODO: log_telemetry('configure', **answers)
     except NoTTYException:

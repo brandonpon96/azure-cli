@@ -5,9 +5,6 @@
 
 import unittest
 
-from azure.cli.core.application import AZ_CLI, Configuration
-
-
 def mock_echo_args(command_name, parameters):
     try:
         argv = ' '.join((command_name, parameters)).split()

@@ -13,7 +13,6 @@ from six import StringIO
 
 import azure.cli.core._help as _help
 from azure.cli.core._help import ArgumentGroupRegistry
-from azure.cli.core.application import Application, Configuration
 from azure.cli.core.commands import \
     (CliCommand, cli_command, _update_command_definitions, command_table)
 

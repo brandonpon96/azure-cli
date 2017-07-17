@@ -5,8 +5,6 @@
 
 import os
 
-from azure.cli.core.application import AZ_CLI
-
 def _generate_ssh_keys(private_key_filepath, public_key_filepath):
     import paramiko
 

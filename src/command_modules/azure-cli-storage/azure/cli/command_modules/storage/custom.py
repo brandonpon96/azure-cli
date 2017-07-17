@@ -10,7 +10,6 @@ from __future__ import print_function
 from azure.cli.core.decorators import transfer_doc
 from azure.cli.core.profiles import get_sdk, supported_api_version, ResourceType
 from azure.cli.command_modules.storage._factory import storage_client_factory
-from azure.cli.core.application import AZ_CLI
 
 from knack.util import CLIError
 

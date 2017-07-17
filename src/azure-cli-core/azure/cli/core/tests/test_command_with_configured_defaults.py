@@ -11,7 +11,6 @@ from azure.cli.core.commands import _update_command_definitions
 
 from azure.cli.core.commands import (command_table, CLIArgumentType, cli_command,
                                      register_cli_argument)
-from azure.cli.core.application import Application, Configuration
 
 from knack.config import CLIConfig
 

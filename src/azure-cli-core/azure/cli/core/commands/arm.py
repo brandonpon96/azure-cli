@@ -8,9 +8,9 @@ import re
 from six import string_types
 
 from azure.cli.core import AzCliCommand
-from azure.cli.core.application import AZ_CLI, IterateValue
-from azure.cli.core.commands import get_op_handler, CONFIRM_PARAM_NAME
+from azure.cli.core.commands import CONFIRM_PARAM_NAME
 from azure.cli.core.commands.client_factory import get_mgmt_service_client
+from azure.cli.core.commands.validators import IterateValue
 from azure.cli.core.util import shell_safe_json_parse
 from azure.cli.core.profiles import ResourceType
 
@@ -292,7 +292,8 @@ def add_id_parameters(_, **kwargs):  # pylint: disable=unused-argument
     for command in command_table.values():
         command_loaded_handler(command)
 
-AZ_CLI.register_event(EVENT_INVOKER_CMD_TBL_LOADED, add_id_parameters)
+# TODO: Move this to somewhere else!!!
+# AZ_CLI.register_event(EVENT_INVOKER_CMD_TBL_LOADED, add_id_parameters)
 
 add_usage = '--add property.listProperty <key=value, string or JSON string>'
 set_usage = '--set property1.property2=<value>'

@@ -24,10 +24,10 @@ AZURE_CLI_PREFIX = 'Context.Default.AzureCLI.'
 decorators.is_diagnostics_mode = telemetry_core.in_diagnostic_mode
 
 
-def _user_agrees_to_telemetry(func):
+def _user_agrees_to_telemetry(cli_ctx, func):
     @wraps(func)
     def _wrapper(*args, **kwargs):
-        if not _get_azure_cli_config().getboolean('core', 'collect_telemetry', fallback=True):
+        if not _get_azure_cli_config(cli_ctx).getboolean('core', 'collect_telemetry', fallback=True):
             return
         return func(*args, **kwargs)
 

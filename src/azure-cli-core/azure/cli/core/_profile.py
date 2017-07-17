@@ -12,7 +12,6 @@ import os.path
 from copy import deepcopy
 from enum import Enum
 
-from azure.cli.core.application import AZ_CLI
 from azure.cli.core._environment import get_config_dir
 from azure.cli.core._session import ACCOUNT
 from azure.cli.core.util import get_file_json
@@ -20,7 +19,6 @@ from azure.cli.core.cloud import get_active_cloud, set_cloud_subscription, init_
 
 from knack.log import get_logger
 from knack.util import CLIError
-
 
 
 # Names below are used by azure-xplat-cli to persist account information into
@@ -59,7 +57,6 @@ TOKEN_FIELDS_EXCLUDED_FROM_PERSISTENCE = ['familyName',
 _CLIENT_ID = '04b07795-8ddb-461a-bbee-02f9e1bf7b46'
 _COMMON_TENANT = 'common'
 
-
 def _authentication_context_factory(tenant, cache):
     import adal
     authority_url = CLOUD.endpoints.active_directory
@@ -69,15 +66,9 @@ def _authentication_context_factory(tenant, cache):
     return adal.AuthenticationContext(authority_url, cache=cache, api_version=None,
                                       validate_authority=(not is_adfs))
 
-
 _AUTH_CTX_FACTORY = _authentication_context_factory
 
 init_known_clouds(force=True)
-CLOUD = get_active_cloud()
-
-logger = get_logger(__name__)
-logger.debug('Current cloud config:\n%s', str(CLOUD))
-
 
 def _load_tokens_from_file(file_path):
     all_entries = []
@@ -94,13 +85,18 @@ def _delete_file(file_path):
             raise
 
 
-class CredentialType(Enum):  # pylint: disable=too-few-public-methods
-    management = CLOUD.endpoints.management
-    rbac = CLOUD.endpoints.active_directory_graph_resource_id
+def get_credential_types(cli_ctx):
 
+    class CredentialType(Enum):  # pylint: disable=too-few-public-methods
+        cloud = get_active_cloud(cli_ctx)
+        management = self.cloud.endpoints.management
+        rbac = self.cloud.endpoints.active_directory_graph_resource_id
+
+    return CredentialType
 
 class Profile(object):
-    def __init__(self, storage=None, auth_ctx_factory=None, use_global_creds_cache=True):
+    def __init__(self, cli_ctx, storage=None, auth_ctx_factory=None, use_global_creds_cache=True):
+        self.ctx = cli_ctx
         self._storage = storage or ACCOUNT
         self.auth_ctx_factory = auth_ctx_factory or _AUTH_CTX_FACTORY
         if use_global_creds_cache:
@@ -205,7 +201,7 @@ class Profile(object):
         existing_ones = self.load_cached_subscriptions(all_clouds=True)
         active_one = next((x for x in existing_ones if x.get(_IS_DEFAULT_SUBSCRIPTION)), None)
         active_subscription_id = active_one[_SUBSCRIPTION_ID] if active_one else None
-        active_cloud = get_active_cloud()
+        active_cloud = get_active_cloud(AZ_CLI)
         default_sub_id = None
 
         # merge with existing ones
@@ -240,7 +236,7 @@ class Profile(object):
 
     def set_active_subscription(self, subscription):  # take id or name
         subscriptions = self.load_cached_subscriptions(all_clouds=True)
-        active_cloud = get_active_cloud()
+        active_cloud = get_active_cloud(AZ_CLI)
         subscription = subscription.lower()
         result = [x for x in subscriptions
                   if subscription in [x[_SUBSCRIPTION_ID].lower(),
@@ -273,7 +269,7 @@ class Profile(object):
 
     def load_cached_subscriptions(self, all_clouds=False):
         subscriptions = self._storage.get(_SUBSCRIPTIONS) or []
-        active_cloud = get_active_cloud()
+        active_cloud = get_active_cloud(AZ_CLI)
         cached_subscriptions = [sub for sub in subscriptions
                                 if all_clouds or sub[_ENVIRONMENT_NAME] == active_cloud.name]
         # use deepcopy as we don't want to persist these changes to file.
@@ -309,11 +305,12 @@ class Profile(object):
             username, tenant, resource)
         return access_token
 
-    def get_login_credentials(self, resource=CLOUD.endpoints.active_directory_resource_id,
+    def get_login_credentials(self, resource=None,
                               subscription_id=None):
         account = self.get_subscription(subscription_id)
         user_type = account[_USER_ENTITY][_USER_TYPE]
         username_or_sp_id = account[_USER_ENTITY][_USER_NAME]
+        resource = resource or get_active_cloud(self.ctx).endpoints.active_directory_resource_id
 
         def _retrieve_token():
             if user_type == _USER:
@@ -328,11 +325,12 @@ class Profile(object):
                 str(account[_SUBSCRIPTION_ID]),
                 str(account[_TENANT_ID]))
 
-    def get_refresh_token(self, resource=CLOUD.endpoints.active_directory_resource_id,
+    def get_refresh_token(self, resource=None,
                           subscription=None):
         account = self.get_subscription(subscription)
         user_type = account[_USER_ENTITY][_USER_TYPE]
         username_or_sp_id = account[_USER_ENTITY][_USER_NAME]
+        resource = resource or get_active_cloud(self.ctx).endpoints.active_directory_resource_id
 
         if user_type == _USER:
             _, _, token_entry = self._creds_cache.retrieve_token_for_user(
@@ -342,11 +340,11 @@ class Profile(object):
         sp_secret = self._creds_cache.retrieve_secret_of_service_principal(username_or_sp_id)
         return username_or_sp_id, sp_secret, None, str(account[_TENANT_ID])
 
-    def get_raw_token(self, resource=CLOUD.endpoints.active_directory_resource_id,
-                      subscription=None):
+    def get_raw_token(self, resource=None, subscription=None):
         account = self.get_subscription(subscription)
         user_type = account[_USER_ENTITY][_USER_TYPE]
         username_or_sp_id = account[_USER_ENTITY][_USER_NAME]
+        resource = resource or get_active_cloud(self.ctx).endpoints.active_directory_resource_id
 
         if user_type == _USER:
             creds = self._creds_cache.retrieve_token_for_user(username_or_sp_id,

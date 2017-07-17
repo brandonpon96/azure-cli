@@ -28,7 +28,6 @@
     <Compile Include="azure-cli-command_modules-nspkg\azure\cli\command_modules\__init__.py" />
     <Compile Include="azure-cli-command_modules-nspkg\setup.py" />
     <Compile Include="azure-cli-core\azure\cli\core\adal_authentication.py" />
-    <Compile Include="azure-cli-core\azure\cli\core\application.py" />
     <Compile Include="azure-cli-core\azure\cli\core\azlogging.py" />
     <Compile Include="azure-cli-core\azure\cli\core\cloud.py" />
     <Compile Include="azure-cli-core\azure\cli\core\commands\arm.py" />
@@ -189,10 +188,8 @@
     <Compile Include="command_modules\azure-cli-billing\azure\cli\command_modules\billing\__init__.py" />
     <Compile Include="command_modules\azure-cli-billing\azure_bdist_wheel.py" />
     <Compile Include="command_modules\azure-cli-billing\setup.py" />
-    <Compile Include="command_modules\azure-cli-cloud\azure\cli\command_modules\cloud\commands.py" />
     <Compile Include="command_modules\azure-cli-cloud\azure\cli\command_modules\cloud\custom.py" />
     <Compile Include="command_modules\azure-cli-cloud\azure\cli\command_modules\cloud\_help.py" />
-    <Compile Include="command_modules\azure-cli-cloud\azure\cli\command_modules\cloud\_params.py" />
     <Compile Include="command_modules\azure-cli-cloud\azure\cli\command_modules\cloud\__init__.py" />
     <Compile Include="command_modules\azure-cli-cloud\azure_bdist_wheel.py" />
     <Compile Include="command_modules\azure-cli-cloud\setup.py" />
@@ -218,11 +215,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="command_modules\azure-cli-component\azure_bdist_wheel.py" />
-    <Compile Include="command_modules\azure-cli-configure\azure\cli\command_modules\configure\commands.py" />
     <Compile Include="command_modules\azure-cli-configure\azure\cli\command_modules\configure\custom.py" />
     <Compile Include="command_modules\azure-cli-configure\azure\cli\command_modules\configure\_consts.py" />
     <Compile Include="command_modules\azure-cli-configure\azure\cli\command_modules\configure\_help.py" />
-    <Compile Include="command_modules\azure-cli-configure\azure\cli\command_modules\configure\_params.py" />
     <Compile Include="command_modules\azure-cli-configure\azure\cli\command_modules\configure\_utils.py" />
     <Compile Include="command_modules\azure-cli-configure\azure\cli\command_modules\configure\__init__.py" />
     <Compile Include="command_modules\azure-cli-configure\azure_bdist_wheel.py" />
