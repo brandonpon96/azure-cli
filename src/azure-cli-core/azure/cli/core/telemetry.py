@@ -24,16 +24,6 @@ AZURE_CLI_PREFIX = 'Context.Default.AzureCLI.'
 decorators.is_diagnostics_mode = telemetry_core.in_diagnostic_mode
 
 
-def _user_agrees_to_telemetry(cli_ctx, func):
-    @wraps(func)
-    def _wrapper(*args, **kwargs):
-        if not _get_azure_cli_config(cli_ctx).getboolean('core', 'collect_telemetry', fallback=True):
-            return
-        return func(*args, **kwargs)
-
-    return _wrapper
-
-
 class TelemetrySession(object):  # pylint: disable=too-many-instance-attributes
     start_time = None
     end_time = None
@@ -141,12 +131,10 @@ class TelemetrySession(object):  # pylint: disable=too-many-instance-attributes
         self.set_custom_properties(result, 'UserAzureId', _get_user_azure_id)
         self.set_custom_properties(result, 'UserAzureSubscriptionId', _get_azure_subscription_id)
         self.set_custom_properties(result, 'DefaultOutputType',
-                                   lambda: _get_azure_cli_config().get('core', 'output',
-                                                                       fallback='unknown'))
+                                   lambda: _get_config(_session.application).get('core', 'output', fallback='unknown'))
         self.set_custom_properties(result, 'EnvironmentVariables', _get_env_string)
         self.set_custom_properties(result, 'Locale',
-                                   lambda: '{},{}'.format(locale.getdefaultlocale()[0],
-                                                          locale.getdefaultlocale()[1]))
+                                   lambda: '{},{}'.format(locale.getdefaultlocale()[0], locale.getdefaultlocale()[1]))
         self.set_custom_properties(result, 'StartTime', str(self.start_time))
         self.set_custom_properties(result, 'EndTime', str(self.end_time))
         self.set_custom_properties(result, 'OutputType', self.output_type)
@@ -189,6 +177,15 @@ class TelemetrySession(object):  # pylint: disable=too-many-instance-attributes
 
 
 _session = TelemetrySession()
+
+def _user_agrees_to_telemetry(func):
+    @wraps(func)
+    def _wrapper(*args, **kwargs):
+        if not _get_config(_session.application).getboolean('core', 'collect_telemetry', fallback=True):
+            return
+        return func(*args, **kwargs)
+
+    return _wrapper
 
 
 # public api
@@ -263,9 +260,8 @@ def set_command_details(command, output_type=None, parameters=None):
 
 @decorators.call_once
 @decorators.suppress_all_exceptions(fallback_return={})
-def _get_azure_cli_config():
-    from azure.cli.core.application import AZ_CLI
-    return AZ_CLI.config
+def _get_config(cli_ctx):
+    return cli_ctx.config
 
 
 # internal utility functions
